@@ -461,6 +461,25 @@ function celebrate() {
 // 다시 도전하기 버튼을 누르면 게임 초기화
 retryBtn.addEventListener("click", resetGame);
 
+// 게임 결과 화면에서 Enter 키를 누르면 즉시 다시 시작
+document.addEventListener("keydown", (event) => {
+
+    if (event.key !== "Enter") return;
+
+    if (event.repeat) return;
+
+    // 게임 진행 중이거나 등급표가 열려 있으면 무시
+    if (playing || !gradeModal.hidden) return;
+
+    // 결과 화면에서만 실행
+    if (!retryBtn.hidden) {
+        event.preventDefault();
+
+        // 게임 초기화 후 시작 버튼을 자동으로 클릭
+        resetGame();
+        startBtn.click();
+    }
+});
 
 // 오른쪽 상단 다시하기 버튼을 누르면 게임 초기화
 resetBtn.addEventListener("click", resetGame);
