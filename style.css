@@ -37,6 +37,13 @@ body {
     margin-bottom: 15px;
 }
 
+/* 오른쪽 위 버튼 배치 */
+.right-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* 공통 버튼 디자인 */
 button {
     border: none;
@@ -60,6 +67,17 @@ button:disabled {
 
 .grade-table-btn:hover {
     background: #6d28d9;
+}
+
+/* 최근 기록 버튼 */
+.history-btn {
+    padding: 9px 15px;
+    background: #0891b2;
+    font-size: 13px;
+}
+
+.history-btn:hover {
+    background: #0e7490;
 }
 
 /* 다시하기 버튼 */

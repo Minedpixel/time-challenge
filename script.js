@@ -28,7 +28,7 @@ const scoreDisplay = document.getElementById("score");
 
 const celebration = document.getElementById("celebration");
 const achievement = document.getElementById("achievement");
-
+const historyBtn = document.getElementById("historyBtn");
 
 // ========================================
 // 2. 게임 상태 변수
@@ -265,6 +265,23 @@ closeGradeBtn.addEventListener("click", () => {
     gradeModal.hidden = true;
 });
 
+// 최근 기록 팝업 열기
+function openHistory() {
+
+    // 게임 중이거나 축하 화면이 표시 중이면 열지 않음
+    if (playing || !celebration.hidden) return;
+
+    // 등급표가 열려 있으면 열지 않음
+    if (!gradeModal.hidden) return;
+
+    renderHistory();
+
+    historyModal.hidden = false;
+}
+
+
+// 기록 버튼을 클릭하거나 터치하면 팝업 열기
+historyBtn.addEventListener("click", openHistory);
 
 // 팝업 바깥쪽 클릭 시 닫기
 

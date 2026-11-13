@@ -12,20 +12,35 @@
 
     <main class="game-container">
 
+        <!-- 상단 버튼 -->
         <div class="top-bar">
+
+            <!-- 왼쪽: 등급표 -->
             <button id="gradeTableBtn" class="grade-table-btn">
                 등급표
             </button>
 
-            <button id="resetBtn" class="reset-btn">
-                ↻ 다시하기
-            </button>
+            <!-- 오른쪽: 기록과 다시하기 -->
+            <div class="right-buttons">
+
+                <button id="historyBtn" class="history-btn">
+                    기록
+                </button>
+
+                <button id="resetBtn" class="reset-btn">
+                    ↻ 다시하기
+                </button>
+
+            </div>
         </div>
 
+        <!-- 게임 제목 -->
         <h1>TIME CHALLENGE</h1>
         <p class="subtitle">정확한 순간을 맞혀보세요!</p>
 
+        <!-- 목표 시간 설정 -->
         <section class="settings">
+
             <label for="duration">목표 시간 설정 (초)</label>
 
             <input
@@ -36,8 +51,10 @@
                 step="0.01"
                 value="5"
             >
+
         </section>
 
+        <!-- 타이머 -->
         <div id="timer">0.000</div>
 
         <!-- PERFECT 달성 시 표시되는 특별 메시지 -->
@@ -45,12 +62,15 @@
             👑 타이밍의 왕! 👑
         </div>
 
+        <!-- 게임 안내 메시지 -->
         <p id="message">게임 시작 버튼을 눌러주세요.</p>
 
+        <!-- 게임 시작 버튼 -->
         <button id="startBtn" class="start-btn">
             게임 시작
         </button>
 
+        <!-- 게임 결과 -->
         <div class="result">
 
             <div>
@@ -76,6 +96,7 @@
 
         </div>
 
+        <!-- 다시 도전하기 버튼 -->
         <button id="retryBtn" class="retry-btn" hidden>
             다시 도전하기
         </button>
@@ -89,11 +110,13 @@
         <div class="modal-content">
 
             <div class="modal-header">
+
                 <h2>등급표</h2>
 
                 <button id="closeGradeBtn" class="close-btn">
                     ✕
                 </button>
+
             </div>
 
             <div class="grade-list">
@@ -184,11 +207,13 @@
         <div class="modal-content history-content">
 
             <div class="modal-header">
+
                 <h2>최근 기록</h2>
 
                 <button id="closeHistoryBtn" class="close-btn">
                     ✕
                 </button>
+
             </div>
 
             <p class="history-guide">
@@ -226,13 +251,16 @@
     <div id="celebration" hidden>
 
         <div class="celebration-content">
+
             <h2>🎉 PERFECT! 🎉</h2>
             <p>완벽한 타이밍!</p>
+
         </div>
 
     </div>
 
 
+    <!-- JavaScript 연결 -->
     <script src="script.js"></script>
 
 </body>
