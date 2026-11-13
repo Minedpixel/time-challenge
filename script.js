@@ -382,11 +382,11 @@ function startGame() {
     // 입력한 목표 시간 검사
     if (
         !Number.isFinite(inputDuration) ||
-        inputDuration < 0.01 ||
+        inputDuration < 3 ||
         inputDuration > 3600
     ) {
 
-        alert("0.01초부터 3600초 사이의 시간을 입력해 주세요.");
+        alert("3초부터 3600초 사이의 시간을 입력해 주세요.");
 
         return;
     }
