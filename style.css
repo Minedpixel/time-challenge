@@ -1,0 +1,366 @@
+
+/* 모든 요소의 기본 여백과 크기 계산 방식 설정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* 전체 페이지의 배경과 가운데 정렬 설정 */
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #101827;
+    color: white;
+    padding: 20px;
+}
+
+/* 게임 전체를 감싸는 상자 디자인 */
+.game-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    background: #1e293b;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+}
+
+/* 상단의 등급표와 다시하기 버튼 배치 */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+/* 모든 버튼의 공통 디자인 */
+button {
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* 비활성화된 버튼의 모양 */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 왼쪽 상단 등급표 버튼 */
+.grade-table-btn {
+    padding: 9px 15px;
+    background: #7c3aed;
+    font-size: 13px;
+}
+
+.grade-table-btn:hover {
+    background: #6d28d9;
+}
+
+/* 오른쪽 상단 다시하기 버튼 */
+.reset-btn {
+    padding: 9px 15px;
+    background: #475569;
+    font-size: 13px;
+}
+
+.reset-btn:hover {
+    background: #64748b;
+}
+
+/* 게임 제목 디자인 */
+h1 {
+    font-size: 30px;
+    letter-spacing: 2px;
+}
+
+/* 게임 설명 문구 디자인 */
+.subtitle {
+    margin-top: 10px;
+    color: #94a3b8;
+}
+
+/* 목표 시간 입력 영역 배치 */
+.settings {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 목표 시간 입력 안내 문구 */
+.settings label {
+    color: #cbd5e1;
+}
+
+/* 목표 시간 입력창 */
+#duration {
+    width: 150px;
+    padding: 10px;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    background: #0f172a;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+}
+
+/* 실시간 타이머 숫자 디자인 */
+#timer {
+    margin-top: 35px;
+    font-size: 65px;
+    font-weight: bold;
+    color: #38bdf8;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 게임 진행 메시지 영역 */
+#message {
+    min-height: 25px;
+    margin-top: 15px;
+    color: #cbd5e1;
+}
+
+/* 게임 시작 버튼 */
+.start-btn {
+    width: 100%;
+    margin-top: 25px;
+    padding: 15px;
+    background: #2563eb;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.start-btn:hover {
+    background: #1d4ed8;
+}
+
+/* 결과를 두 열로 나누어 배치 */
+.result {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px 10px;
+    margin-top: 35px;
+    padding: 25px 10px;
+    background: #0f172a;
+    border-radius: 12px;
+}
+
+/* 결과 항목 각각의 배치 */
+.result div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 결과 항목의 설명 문구 */
+.result span {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* 결과 숫자와 등급 이름 */
+.result strong {
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+/* 등급 범위 설명 */
+.result small {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* 등급 이름 강조 */
+#grade {
+    color: #facc15;
+}
+
+/* 다시 도전하기 버튼 */
+.retry-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px;
+    background: #475569;
+    font-size: 15px;
+}
+
+.retry-btn:hover {
+    background: #64748b;
+}
+
+/* 등급표 팝업의 배경 */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.75);
+}
+
+/* hidden 속성이 있을 때 팝업을 완전히 숨김 */
+.modal[hidden] {
+    display: none;
+}
+
+/* 등급표 내부 상자 */
+.modal-content {
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 25px;
+    background: #1e293b;
+    border-radius: 15px;
+}
+
+/* 등급표 제목과 닫기 버튼 배치 */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-size: 23px;
+}
+
+/* 등급표 닫기 버튼 */
+.close-btn {
+    padding: 7px 11px;
+    background: #475569;
+    font-size: 16px;
+}
+
+.close-btn:hover {
+    background: #64748b;
+}
+
+/* 등급별 항목을 세로로 배치 */
+.grade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 등급 이름과 오차 범위를 한 줄에 표시 */
+.grade-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    background: #0f172a;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+/* 등급 이름과 오차 범위의 글자 크기 */
+.grade-row strong {
+    font-size: 13px;
+}
+
+.grade-row span {
+    color: #cbd5e1;
+    text-align: right;
+}
+
+/* 등급별 색상 */
+.perfect strong { color: #facc15; }
+.excellent strong { color: #f472b6; }
+.great strong { color: #c084fc; }
+.very-good strong { color: #a78bfa; }
+.good strong { color: #60a5fa; }
+.nice strong { color: #38bdf8; }
+.cool strong { color: #2dd4bf; }
+.not-bad strong { color: #34d399; }
+.soso strong { color: #a3e635; }
+.okay strong { color: #bef264; }
+.close strong { color: #facc15; }
+.almost strong { color: #fbbf24; }
+.bad strong { color: #fb923c; }
+.poor strong { color: #f87171; }
+.try-again strong { color: #94a3b8; }
+
+/* PERFECT 달성 시 화면 전체에 표시되는 축하 배경 */
+#celebration {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.8);
+
+    /* 축하 화면이 다시하기 버튼 등의 클릭을 막지 않게 함 */
+    pointer-events: none;
+}
+
+/* 축하 화면 숨김 처리 */
+#celebration[hidden] {
+    display: none;
+}
+
+/* 축하 문구의 애니메이션과 배치 */
+.celebration-content {
+    padding: 40px;
+    text-align: center;
+    animation: pop 0.5s ease;
+}
+
+/* PERFECT 글자 디자인 */
+.celebration-content h2 {
+    color: #facc15;
+    font-size: 35px;
+}
+
+/* 축하 메시지 디자인 */
+.celebration-content p {
+    margin-top: 15px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* 축하 문구가 작게 나타나 커지는 애니메이션 */
+@keyframes pop {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 화면이 작은 휴대전화에서 글자와 여백 조정 */
+@media (max-width: 400px) {
+    .game-container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 25px;
+    }
+
+    #timer {
+        font-size: 50px;
+    }
+
+    .modal-content {
+        padding: 18px;
+    }
+}
