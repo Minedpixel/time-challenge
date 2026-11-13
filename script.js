@@ -1,5 +1,8 @@
 
-// HTML에서 필요한 요소들을 가져옴
+// ========================================
+// 1. HTML 요소 가져오기
+// ========================================
+
 const timer = document.getElementById("timer");
 const duration = document.getElementById("duration");
 
@@ -27,26 +30,32 @@ const celebration = document.getElementById("celebration");
 const achievement = document.getElementById("achievement");
 
 
-// 게임 진행 상태를 저장하는 변수
+// ========================================
+// 2. 게임 상태 변수
+// ========================================
+
 let startTime = 0;
 let targetTime = 0;
+
 let animationId = null;
 let playing = false;
 
-// 효과음을 생성하기 위한 오디오 객체
 let audioContext = null;
 
-// PERFECT 축하 화면의 닫기 가능 여부와 타이머
 let celebrationCanClose = false;
 let celebrationTimeout = null;
 
 
-// 최근 기록을 저장하는 변수
+// 최근 기록 불러오기
 let gameRecords = loadRecords();
 
 
-// 등급별 이름과 오차 범위를 저장
-// maxError는 밀리초 단위
+// ========================================
+// 3. 등급 데이터
+// ========================================
+
+// 오차 범위는 밀리초 단위
+
 const grades = [
     { name: "PERFECT", maxError: 0, range: "0.000초" },
     { name: "EXCELLENT", maxError: 10, range: "0.001 ~ 0.010초" },
@@ -66,44 +75,62 @@ const grades = [
 ];
 
 
-// 밀리초를 초 단위로 변환하고 소수점 셋째 자리까지 반올림
+// ========================================
+// 4. 시간 표시 함수
+// ========================================
+
+// 밀리초를 초 단위로 변환
+// 소수점 셋째 자리까지 표시
+
 function formatTime(ms) {
     return (Math.round(ms) / 1000).toFixed(3);
 }
 
 
-// 저장된 기록을 불러오는 함수
+// ========================================
+// 5. 최근 기록 관리
+// ========================================
+
+// 브라우저에 저장된 기록 불러오기
+
 function loadRecords() {
 
     try {
         const savedRecords = localStorage.getItem("timeChallengeRecords");
 
-        if (!savedRecords) return [];
+        if (!savedRecords) {
+            return [];
+        }
 
         const parsedRecords = JSON.parse(savedRecords);
 
-        if (!Array.isArray(parsedRecords)) return [];
+        if (!Array.isArray(parsedRecords)) {
+            return [];
+        }
 
         return parsedRecords.slice(0, 10);
 
     } catch (error) {
 
         console.error("기록을 불러오지 못했습니다.", error);
+
         return [];
     }
 }
 
 
-// 새로운 기록을 브라우저에 저장
+// 새로운 기록 저장
+
 function saveRecord(record) {
 
     // 가장 최근 기록을 맨 앞에 추가
     gameRecords.unshift(record);
 
-    // 최근 10개만 남김
+    // 최대 10개까지만 유지
     gameRecords = gameRecords.slice(0, 10);
 
     try {
+
         localStorage.setItem(
             "timeChallengeRecords",
             JSON.stringify(gameRecords)
@@ -116,12 +143,13 @@ function saveRecord(record) {
 }
 
 
-// 최근 기록 팝업에 기록을 표시
+// 최근 기록 화면에 표시
+
 function renderHistory() {
 
     historyList.replaceChildren();
 
-    // 저장된 기록이 없는 경우
+    // 기록이 없는 경우
     if (gameRecords.length === 0) {
 
         const row = document.createElement("tr");
@@ -137,7 +165,7 @@ function renderHistory() {
         return;
     }
 
-    // 저장된 기록을 하나씩 화면에 표시
+    // 저장된 기록을 하나씩 화면에 추가
     gameRecords.forEach((record) => {
 
         const row = document.createElement("tr");
@@ -148,10 +176,7 @@ function renderHistory() {
         const gradeCell = document.createElement("td");
 
         timeCell.textContent = record.time + "초";
-
-        // 오차에는 이미 초가 포함되어 있으므로 그대로 표시
         errorCell.textContent = record.error;
-
         scoreCell.textContent = Number(record.score).toLocaleString();
         gradeCell.textContent = record.grade;
 
@@ -169,7 +194,12 @@ function renderHistory() {
 }
 
 
-// 결과 화면과 축하 화면을 초기 상태로 되돌림
+// ========================================
+// 6. 게임 초기화
+// ========================================
+
+// 결과와 PERFECT 축하 화면 초기화
+
 function clearResults() {
 
     timer.textContent = "0.000";
@@ -180,25 +210,27 @@ function clearResults() {
     gradeRangeDisplay.textContent = "-";
     scoreDisplay.textContent = "-";
 
-    // PERFECT 메시지 초기화
     achievement.hidden = true;
-    achievement.textContent = "👑 타이밍의 왕! 👑";
 
-    // 축하 화면 타이머 초기화
     clearTimeout(celebrationTimeout);
-    celebrationTimeout = null;
 
+    celebrationTimeout = null;
     celebrationCanClose = false;
+
     celebration.hidden = true;
 }
 
 
-// 게임을 처음 상태로 초기화
+// 게임 전체를 처음 상태로 되돌림
+
 function resetGame() {
 
     playing = false;
 
-    cancelAnimationFrame(animationId);
+    if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
 
     clearResults();
 
@@ -209,25 +241,33 @@ function resetGame() {
 
     retryBtn.hidden = true;
 
-    // 열려 있는 팝업 닫기
     gradeModal.hidden = true;
     historyModal.hidden = true;
 }
 
 
-// 등급표 버튼을 누르면 등급표 표시
+// ========================================
+// 7. 등급표 팝업
+// ========================================
+
+// 등급표 열기
+
 gradeTableBtn.addEventListener("click", () => {
+
     gradeModal.hidden = false;
 });
 
 
-// 등급표 닫기 버튼
+// 등급표 닫기
+
 closeGradeBtn.addEventListener("click", () => {
+
     gradeModal.hidden = true;
 });
 
 
-// 등급표 바깥쪽을 누르면 닫기
+// 팝업 바깥쪽 클릭 시 닫기
+
 gradeModal.addEventListener("click", (event) => {
 
     if (event.target === gradeModal) {
@@ -236,13 +276,20 @@ gradeModal.addEventListener("click", (event) => {
 });
 
 
-// 최근 기록 닫기 버튼
+// ========================================
+// 8. 최근 기록 팝업
+// ========================================
+
+// 최근 기록 닫기
+
 closeHistoryBtn.addEventListener("click", () => {
+
     historyModal.hidden = true;
 });
 
 
-// 최근 기록 팝업 바깥쪽을 누르면 닫기
+// 팝업 바깥쪽 클릭 시 닫기
+
 historyModal.addEventListener("click", (event) => {
 
     if (event.target === historyModal) {
@@ -251,23 +298,24 @@ historyModal.addEventListener("click", (event) => {
 });
 
 
-// R 키를 눌러 최근 기록 확인
+// R 키를 눌러 최근 기록 열기
+
 document.addEventListener("keydown", (event) => {
 
     if (event.key.toLowerCase() !== "r") return;
 
     if (event.repeat) return;
 
-    // 게임 진행 중에는 무시
+    // 게임 중에는 기록을 열 수 없음
     if (playing) return;
 
-    // PERFECT 축하 화면이 표시되는 동안에는 무시
+    // 축하 화면이 표시 중이면 무시
     if (!celebration.hidden) return;
 
     // 다른 팝업이 열려 있으면 무시
     if (!gradeModal.hidden || !historyModal.hidden) return;
 
-    // 입력창에 글자를 입력하는 중이면 무시
+    // 입력창에 포커스가 있으면 무시
     const activeElement = document.activeElement;
 
     if (
@@ -285,40 +333,48 @@ document.addEventListener("keydown", (event) => {
 });
 
 
-// ESC 키를 누르면 등급표와 최근 기록 팝업 닫기
+// ESC 키로 팝업 닫기
+
 document.addEventListener("keydown", (event) => {
 
     if (event.key === "Escape") {
+
         gradeModal.hidden = true;
         historyModal.hidden = true;
     }
 });
 
 
-// 게임 시작 버튼을 눌렀을 때 실행
-startBtn.addEventListener("click", () => {
+// ========================================
+// 9. 게임 시작
+// ========================================
 
+function startGame() {
+
+    // 이미 게임이 진행 중이면 시작하지 않음
     if (playing) return;
 
     const inputDuration = Number(duration.value);
 
-    // 목표 시간 입력값 검사
+    // 입력한 목표 시간 검사
     if (
         !Number.isFinite(inputDuration) ||
         inputDuration < 0.01 ||
         inputDuration > 3600
     ) {
+
         alert("0.01초부터 3600초 사이의 시간을 입력해 주세요.");
+
         return;
     }
 
-    // 입력한 초를 밀리초로 변환
+    // 초를 밀리초로 변환
     targetTime = inputDuration * 1000;
 
-    // 이전 결과와 축하 화면 초기화
+    // 이전 결과 초기화
     clearResults();
 
-    // 게임 시작 시각 기록
+    // 시작 시간 기록
     startTime = performance.now();
 
     playing = true;
@@ -332,45 +388,63 @@ startBtn.addEventListener("click", () => {
 
     // 타이머 시작
     updateTimer();
-});
+}
 
 
-// 화면에 경과 시간을 실시간으로 표시
+// 시작 버튼 클릭 시 게임 시작
+
+startBtn.addEventListener("click", startGame);
+
+
+// ========================================
+// 10. 타이머 업데이트
+// ========================================
+
 function updateTimer() {
 
     if (!playing) return;
 
+    // 현재까지 경과한 시간 계산
     const elapsed = performance.now() - startTime;
 
-    // 실시간 시간도 소수점 셋째 자리까지 반올림하여 표시
     timer.textContent = formatTime(elapsed);
 
+    // 다음 화면 갱신 예약
     animationId = requestAnimationFrame(updateTimer);
 }
 
 
-// 스페이스바 입력을 감지하여 게임 종료
+// ========================================
+// 11. SPACE 키로 게임 종료
+// ========================================
+
 document.addEventListener("keydown", (event) => {
 
     if (event.code !== "Space") return;
 
+    // 게임 중이 아닐 때는 무시
     if (!playing) return;
 
+    // 스페이스바로 페이지가 스크롤되는 현상 방지
     event.preventDefault();
 
-    // 키를 누르고 있는 동안 반복 실행되는 현상 방지
+    // 키를 누르고 있을 때 반복 실행 방지
     if (event.repeat) return;
 
+    // 실제 입력 시간 계산
     const inputTime = performance.now() - startTime;
 
-    // 실제 입력 시간과 목표 시간의 차이 계산
+    // 목표 시간과 실제 입력 시간의 차이
     const error = inputTime - targetTime;
 
     finishGame(inputTime, error);
 });
 
 
-// 반올림된 오차에 따라 등급을 결정
+// ========================================
+// 12. 등급 판정
+// ========================================
+
 function getGrade(errorMs) {
 
     for (const grade of grades) {
@@ -384,56 +458,66 @@ function getGrade(errorMs) {
 }
 
 
-// 게임 종료 후 결과 계산 및 표시
+// ========================================
+// 13. 게임 결과 계산
+// ========================================
+
 function finishGame(inputTime, error) {
 
-    // 게임 종료 및 타이머 애니메이션 중단
     playing = false;
-    cancelAnimationFrame(animationId);
+
+    if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
 
     // 입력 시간을 밀리초 단위로 반올림
     const roundedInputTime = Math.round(inputTime);
 
     // 오차의 절댓값을 먼저 반올림
-    // 음수 오차에서도 반올림이 비대칭적으로 처리되는 것을 방지
     const errorMs = Math.round(Math.abs(error));
 
-    // 반올림된 오차를 초 단위로 변환
+    // 반올림된 오차를 초로 변환
     const displayedError = errorMs / 1000;
 
-    // 실제 오차의 방향에 따라 부호 결정
+    // 실제 오차 방향에 따라 부호 결정
     const sign = error > 0 ? "+" : error < 0 ? "-" : "";
 
-    // 최종 입력 시간을 소수점 셋째 자리까지 표시
+    // 최종 시간 표시
     timer.textContent = formatTime(roundedInputTime);
     finalTimeDisplay.textContent = formatTime(roundedInputTime);
 
-    // 반올림된 오차를 소수점 셋째 자리까지 표시
+    // 오차 표시
     errorDisplay.textContent =
         `${sign}${displayedError.toFixed(3)}초`;
 
-    // 반올림된 오차를 기준으로 등급 판정
+    // 등급 판정
     const grade = getGrade(errorMs);
 
     gradeDisplay.textContent = grade.name;
     gradeRangeDisplay.textContent = grade.range;
 
-    // 반올림된 오차를 기준으로 점수 계산
+    // 점수 계산
     const score = Math.round(
         1000 * Math.pow(0.5, errorMs / 100)
     );
 
     scoreDisplay.textContent = score;
 
-    // 반올림된 결과를 최근 기록에 저장
+    // 최근 기록 저장
     saveRecord({
+
         time: formatTime(roundedInputTime),
+
         error: `${sign}${displayedError.toFixed(3)}초`,
+
         score: score,
+
         grade: grade.name
     });
 
-    // PERFECT 등급일 경우 특별 메시지와 축하 화면 표시
+
+    // PERFECT인 경우
     if (grade.name === "PERFECT") {
 
         message.textContent = "완벽한 타이밍!";
@@ -441,33 +525,33 @@ function finishGame(inputTime, error) {
         achievement.hidden = false;
         achievement.textContent = "👑 타이밍의 왕! 👑";
 
-        // PERFECT 전용 축하 효과 실행
         celebrate();
 
     } else {
 
-        // PERFECT가 아니면 특별 메시지 숨기기
         achievement.hidden = true;
 
-        // 목표 시간보다 빠르거나 늦었는지 안내
+        // 빠르게 눌렀는지 늦게 눌렀는지 표시
         message.textContent = error < 0
             ? "목표 시간보다 일찍 눌렀습니다."
             : "목표 시간보다 늦게 눌렀습니다.";
 
-        // 등급에 해당하는 효과음 재생
+        // 등급에 맞는 효과음 재생
         playGradeSound(grade.name);
     }
 
-    // 게임 종료 후 버튼과 입력창 다시 활성화
+    // 게임 종료 후 버튼 활성화
     startBtn.disabled = false;
     duration.disabled = false;
 
-    // 다시 도전하기 버튼 표시
     retryBtn.hidden = false;
 }
 
 
-// 등급마다 다른 효과음 생성
+// ========================================
+// 14. 등급별 효과음
+// ========================================
+
 function playGradeSound(gradeName) {
 
     const AudioContextClass =
@@ -483,7 +567,7 @@ function playGradeSound(gradeName) {
         audioContext.resume();
     }
 
-    // 등급별 음계
+    // 등급별 음계 설정
     const soundPatterns = {
 
         "EXCELLENT": [1046.50, 1318.51],
@@ -508,7 +592,7 @@ function playGradeSound(gradeName) {
 
     const start = audioContext.currentTime;
 
-    // 낮은 등급은 sawtooth, 나머지는 triangle 음색 사용
+    // 낮은 등급은 sawtooth 음색 사용
     const type =
         ["BAD", "POOP", "TRY AGAIN"].includes(gradeName)
             ? "sawtooth"
@@ -545,7 +629,10 @@ function playGradeSound(gradeName) {
 }
 
 
-// PERFECT 축하 효과
+// ========================================
+// 15. PERFECT 축하 효과
+// ========================================
+
 function celebrate() {
 
     celebration.hidden = false;
@@ -559,7 +646,7 @@ function celebrate() {
 
     clearTimeout(celebrationTimeout);
 
-    // 3초 후 클릭하여 닫을 수 있도록 설정
+    // 3초 후 축하 화면을 닫을 수 있도록 설정
     celebrationTimeout = setTimeout(() => {
 
         celebrationCanClose = true;
@@ -624,10 +711,10 @@ function celebrate() {
 }
 
 
-// 축하 화면을 클릭하면 닫기
+// 축하 화면 클릭 시 닫기
+
 celebration.addEventListener("click", (event) => {
 
-    // 클릭 이벤트가 다른 요소로 전달되지 않도록 방지
     event.stopPropagation();
 
     // 3초가 지나기 전에는 닫히지 않음
@@ -638,48 +725,75 @@ celebration.addEventListener("click", (event) => {
     celebrationTimeout = null;
     celebrationCanClose = false;
 
-    // 축하 팝업만 닫음
-    // 타이머와 결과 데이터는 초기화하지 않음
+    // 축하 화면만 닫고 결과는 유지
     celebration.hidden = true;
 });
 
 
-// 다시 도전하기 버튼을 누르면 게임 초기화
+// ========================================
+// 16. 다시 도전하기
+// ========================================
+
+// 다시 도전하기 버튼
+
 retryBtn.addEventListener("click", resetGame);
 
 
-// 게임 결과 화면에서 Enter 키를 누르면 즉시 다시 시작
+// ========================================
+// 17. Enter 키 처리
+// ========================================
+
+// Enter 키를 누르면 첫 게임 시작 또는 다시 도전
+
 document.addEventListener("keydown", (event) => {
 
     if (event.key !== "Enter") return;
 
+    // 키를 누르고 있는 동안 반복 실행 방지
     if (event.repeat) return;
 
+    // 게임이 진행 중이면 무시
     if (playing) return;
 
-    // 팝업이 열려 있으면 무시
+    // 등급표나 최근 기록이 열려 있으면 무시
     if (!gradeModal.hidden || !historyModal.hidden) return;
 
-    // 축하 화면이 표시 중이면 무시
+    // PERFECT 축하 화면이 열려 있으면 무시
     if (!celebration.hidden) return;
 
-    // 결과 화면에서만 실행
-    if (!retryBtn.hidden) {
+    // Enter의 기본 동작 방지
+    event.preventDefault();
 
-        event.preventDefault();
+    // 결과가 없는 첫 시작 상태
+    if (retryBtn.hidden) {
 
-        resetGame();
-        startBtn.click();
+        startGame();
+
+        return;
     }
+
+    // 결과가 있는 경우 초기화 후 다시 시작
+    resetGame();
+
+    startGame();
 });
 
 
-// 오른쪽 상단 다시하기 버튼
+// ========================================
+// 18. 상단 다시하기 버튼
+// ========================================
+
 resetBtn.addEventListener("click", resetGame);
 
 
-// 페이지가 처음 열렸을 때 초기 상태 설정
+// ========================================
+// 19. 페이지 최초 실행
+// ========================================
+
+// 페이지가 열리면 게임 초기화
+
 resetGame();
 
-// 저장된 기록 표시 준비
+// 최근 기록 화면 준비
+
 renderHistory();
