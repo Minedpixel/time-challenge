@@ -67,11 +67,10 @@ const grades = [
 ];
 
 
-// 시간을 소수점 셋째 자리까지 내림하여 표시
+// 측정 시간을 소수점 셋째 자리까지 반올림하여 표시
 function formatTime(ms) {
-    return (Math.floor(ms) / 1000).toFixed(3);
+    return (Math.round(ms) / 1000).toFixed(3);
 }
-
 
 // 저장된 기록을 불러오는 함수
 function loadRecords() {
