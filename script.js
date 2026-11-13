@@ -66,7 +66,7 @@ const grades = [
 ];
 
 
-// 측정 시간을 소수점 셋째 자리까지 반올림하여 표시
+// 밀리초를 초 단위로 변환하고 소수점 셋째 자리까지 반올림
 function formatTime(ms) {
     return (Math.round(ms) / 1000).toFixed(3);
 }
@@ -97,6 +97,7 @@ function loadRecords() {
 // 새로운 기록을 브라우저에 저장
 function saveRecord(record) {
 
+    // 가장 최근 기록을 맨 앞에 추가
     gameRecords.unshift(record);
 
     // 최근 10개만 남김
@@ -120,6 +121,7 @@ function renderHistory() {
 
     historyList.replaceChildren();
 
+    // 저장된 기록이 없는 경우
     if (gameRecords.length === 0) {
 
         const row = document.createElement("tr");
@@ -135,6 +137,7 @@ function renderHistory() {
         return;
     }
 
+    // 저장된 기록을 하나씩 화면에 표시
     gameRecords.forEach((record) => {
 
         const row = document.createElement("tr");
@@ -145,7 +148,10 @@ function renderHistory() {
         const gradeCell = document.createElement("td");
 
         timeCell.textContent = record.time + "초";
-        errorCell.textContent = record.error + "초";
+
+        // 오차에는 이미 초가 포함되어 있으므로 그대로 표시
+        errorCell.textContent = record.error;
+
         scoreCell.textContent = Number(record.score).toLocaleString();
         gradeCell.textContent = record.grade;
 
@@ -174,7 +180,7 @@ function clearResults() {
     gradeRangeDisplay.textContent = "-";
     scoreDisplay.textContent = "-";
 
-    // PERFECT 메시지도 초기화
+    // PERFECT 메시지 초기화
     achievement.hidden = true;
     achievement.textContent = "👑 타이밍의 왕! 👑";
 
@@ -203,7 +209,7 @@ function resetGame() {
 
     retryBtn.hidden = true;
 
-    // 팝업도 닫음
+    // 열려 있는 팝업 닫기
     gradeModal.hidden = true;
     historyModal.hidden = true;
 }
@@ -279,7 +285,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 
-// ESC 키를 누르면 모든 팝업 닫기
+// ESC 키를 누르면 등급표와 최근 기록 팝업 닫기
 document.addEventListener("keydown", (event) => {
 
     if (event.key === "Escape") {
@@ -309,6 +315,7 @@ startBtn.addEventListener("click", () => {
     // 입력한 초를 밀리초로 변환
     targetTime = inputDuration * 1000;
 
+    // 이전 결과와 축하 화면 초기화
     clearResults();
 
     // 게임 시작 시각 기록
@@ -323,6 +330,7 @@ startBtn.addEventListener("click", () => {
 
     retryBtn.hidden = true;
 
+    // 타이머 시작
     updateTimer();
 });
 
@@ -334,6 +342,7 @@ function updateTimer() {
 
     const elapsed = performance.now() - startTime;
 
+    // 실시간 시간도 소수점 셋째 자리까지 반올림하여 표시
     timer.textContent = formatTime(elapsed);
 
     animationId = requestAnimationFrame(updateTimer);
@@ -349,17 +358,19 @@ document.addEventListener("keydown", (event) => {
 
     event.preventDefault();
 
+    // 키를 누르고 있는 동안 반복 실행되는 현상 방지
     if (event.repeat) return;
 
     const inputTime = performance.now() - startTime;
 
+    // 실제 입력 시간과 목표 시간의 차이 계산
     const error = inputTime - targetTime;
 
     finishGame(inputTime, error);
 });
 
 
-// 오차에 따라 등급을 결정
+// 반올림된 오차에 따라 등급을 결정
 function getGrade(errorMs) {
 
     for (const grade of grades) {
@@ -376,85 +387,82 @@ function getGrade(errorMs) {
 // 게임 종료 후 결과 계산 및 표시
 function finishGame(inputTime, error) {
 
+    // 게임 종료 및 타이머 애니메이션 중단
     playing = false;
-
     cancelAnimationFrame(animationId);
 
-    // 최종 입력 시간을 소수점 셋째 자리까지 반올림
-    const formattedTime = formatTime(inputTime);
+    // 입력 시간을 밀리초 단위로 반올림
+    const roundedInputTime = Math.round(inputTime);
 
-    timer.textContent = formattedTime;
-    finalTimeDisplay.textContent = formattedTime + "초";
+    // 오차의 절댓값을 먼저 반올림
+    // 음수 오차에서도 반올림이 비대칭적으로 처리되는 것을 방지
+    const errorMs = Math.round(Math.abs(error));
 
-    // 오차의 절댓값을 밀리초 단위로 계산
-    // 기존 규칙에 따라 소수점 아래 밀리초는 버림
-    const errorMs = Math.floor(Math.abs(error));
-
+    // 반올림된 오차를 초 단위로 변환
     const displayedError = errorMs / 1000;
 
-    const sign =
-        error > 0 ? "+" :
-        error < 0 ? "-" : "";
+    // 실제 오차의 방향에 따라 부호 결정
+    const sign = error > 0 ? "+" : error < 0 ? "-" : "";
 
-    const formattedError = sign + displayedError.toFixed(3);
+    // 최종 입력 시간을 소수점 셋째 자리까지 표시
+    timer.textContent = formatTime(roundedInputTime);
+    finalTimeDisplay.textContent = formatTime(roundedInputTime);
 
-    errorDisplay.textContent = formattedError + "초";
+    // 반올림된 오차를 소수점 셋째 자리까지 표시
+    errorDisplay.textContent =
+        `${sign}${displayedError.toFixed(3)}초`;
 
-
-    // 등급 판정
+    // 반올림된 오차를 기준으로 등급 판정
     const grade = getGrade(errorMs);
 
     gradeDisplay.textContent = grade.name;
     gradeRangeDisplay.textContent = grade.range;
 
-
-    // 점수 계산
+    // 반올림된 오차를 기준으로 점수 계산
     const score = Math.round(
         1000 * Math.pow(0.5, errorMs / 100)
     );
 
-    scoreDisplay.textContent = score.toLocaleString() + "점";
+    scoreDisplay.textContent = score;
 
-
-    // 최근 기록 저장
+    // 반올림된 결과를 최근 기록에 저장
     saveRecord({
-        time: formattedTime,
-        error: formattedError,
+        time: formatTime(roundedInputTime),
+        error: `${sign}${displayedError.toFixed(3)}초`,
         score: score,
         grade: grade.name
     });
 
-
-    // PERFECT일 경우 특별한 메시지와 축하 화면 표시
+    // PERFECT 등급일 경우 특별 메시지와 축하 화면 표시
     if (grade.name === "PERFECT") {
 
         message.textContent = "완벽한 타이밍!";
 
-        // 타이머 아래에 특별 메시지를 계속 표시
-        achievement.textContent = "👑 타이밍의 왕! 👑";
         achievement.hidden = false;
+        achievement.textContent = "👑 타이밍의 왕! 👑";
 
+        // PERFECT 전용 축하 효과 실행
         celebrate();
 
     } else {
 
-        // PERFECT가 아니면 특별 메시지를 표시하지 않음
+        // PERFECT가 아니면 특별 메시지 숨기기
         achievement.hidden = true;
 
-        if (error < 0) {
-            message.textContent = "목표 시간보다 일찍 눌렀어요!";
-        } else {
-            message.textContent = "목표 시간보다 늦게 눌렀어요!";
-        }
+        // 목표 시간보다 빠르거나 늦었는지 안내
+        message.textContent = error < 0
+            ? "목표 시간보다 일찍 눌렀습니다."
+            : "목표 시간보다 늦게 눌렀습니다.";
 
+        // 등급에 해당하는 효과음 재생
         playGradeSound(grade.name);
     }
 
-
-    // 게임 종료 후 버튼 활성화
+    // 게임 종료 후 버튼과 입력창 다시 활성화
     startBtn.disabled = false;
     duration.disabled = false;
 
+    // 다시 도전하기 버튼 표시
     retryBtn.hidden = false;
 }
 
@@ -500,6 +508,7 @@ function playGradeSound(gradeName) {
 
     const start = audioContext.currentTime;
 
+    // 낮은 등급은 sawtooth, 나머지는 triangle 음색 사용
     const type =
         ["BAD", "POOP", "TRY AGAIN"].includes(gradeName)
             ? "sawtooth"
@@ -630,7 +639,7 @@ celebration.addEventListener("click", (event) => {
     celebrationCanClose = false;
 
     // 축하 팝업만 닫음
-    // timer와 결과 데이터는 절대 초기화하지 않음
+    // 타이머와 결과 데이터는 초기화하지 않음
     celebration.hidden = true;
 });
 
