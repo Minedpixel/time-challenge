@@ -14,6 +14,7 @@ const gradeTableBtn = document.getElementById("gradeTableBtn");
 const gradeModal = document.getElementById("gradeModal");
 const closeGradeBtn = document.getElementById("closeGradeBtn");
 
+const historyBtn = document.getElementById("historyBtn");
 const historyModal = document.getElementById("historyModal");
 const closeHistoryBtn = document.getElementById("closeHistoryBtn");
 const historyList = document.getElementById("historyList");
@@ -28,7 +29,7 @@ const scoreDisplay = document.getElementById("score");
 
 const celebration = document.getElementById("celebration");
 const achievement = document.getElementById("achievement");
-const historyBtn = document.getElementById("historyBtn");
+
 
 // ========================================
 // 2. 게임 상태 변수
@@ -236,7 +237,10 @@ function resetGame() {
 
     message.textContent = "게임 시작 버튼을 눌러주세요.";
 
+    // 시작 버튼 원래 상태로 복구
     startBtn.disabled = false;
+    startBtn.textContent = "게임 시작";
+
     duration.disabled = false;
 
     retryBtn.hidden = true;
@@ -265,7 +269,23 @@ closeGradeBtn.addEventListener("click", () => {
     gradeModal.hidden = true;
 });
 
+
+// 팝업 바깥쪽 클릭 시 닫기
+
+gradeModal.addEventListener("click", (event) => {
+
+    if (event.target === gradeModal) {
+        gradeModal.hidden = true;
+    }
+});
+
+
+// ========================================
+// 8. 최근 기록 팝업
+// ========================================
+
 // 최근 기록 팝업 열기
+
 function openHistory() {
 
     // 게임 중이거나 축하 화면이 표시 중이면 열지 않음
@@ -281,21 +301,9 @@ function openHistory() {
 
 
 // 기록 버튼을 클릭하거나 터치하면 팝업 열기
+
 historyBtn.addEventListener("click", openHistory);
 
-// 팝업 바깥쪽 클릭 시 닫기
-
-gradeModal.addEventListener("click", (event) => {
-
-    if (event.target === gradeModal) {
-        gradeModal.hidden = true;
-    }
-});
-
-
-// ========================================
-// 8. 최근 기록 팝업
-// ========================================
 
 // 최근 기록 닫기
 
@@ -344,9 +352,7 @@ document.addEventListener("keydown", (event) => {
 
     event.preventDefault();
 
-    renderHistory();
-
-    historyModal.hidden = false;
+    openHistory();
 });
 
 
@@ -396,9 +402,13 @@ function startGame() {
 
     playing = true;
 
-    message.textContent = "목표 시간에 맞춰 SPACE!";
+    message.textContent = "목표 시간에 맞춰 멈추기!";
 
-    startBtn.disabled = true;
+    // 시작 버튼을 멈추기 버튼으로 변경
+    startBtn.disabled = false;
+    startBtn.textContent = "멈추기";
+
+    // 목표 시간 변경 방지
     duration.disabled = true;
 
     retryBtn.hidden = true;
@@ -408,13 +418,45 @@ function startGame() {
 }
 
 
-// 시작 버튼 클릭 시 게임 시작
+// ========================================
+// 10. 게임 정지
+// ========================================
 
-startBtn.addEventListener("click", startGame);
+function stopGame() {
+
+    // 게임 중이 아닐 때는 실행하지 않음
+    if (!playing) return;
+
+    // 현재까지 경과한 시간 계산
+    const inputTime = performance.now() - startTime;
+
+    // 목표 시간과 실제 입력 시간의 차이
+    const error = inputTime - targetTime;
+
+    // 기존 결과 계산 함수 실행
+    finishGame(inputTime, error);
+}
+
+
+// 시작 버튼 클릭 시 시작 또는 정지
+
+startBtn.addEventListener("click", () => {
+
+    if (playing) {
+
+        // 게임이 진행 중이면 정지
+        stopGame();
+
+    } else {
+
+        // 게임이 진행 중이 아니면 시작
+        startGame();
+    }
+});
 
 
 // ========================================
-// 10. 타이머 업데이트
+// 11. 타이머 업데이트
 // ========================================
 
 function updateTimer() {
@@ -432,7 +474,7 @@ function updateTimer() {
 
 
 // ========================================
-// 11. SPACE 키로 게임 종료
+// 12. SPACE 키로 게임 종료
 // ========================================
 
 document.addEventListener("keydown", (event) => {
@@ -448,18 +490,13 @@ document.addEventListener("keydown", (event) => {
     // 키를 누르고 있을 때 반복 실행 방지
     if (event.repeat) return;
 
-    // 실제 입력 시간 계산
-    const inputTime = performance.now() - startTime;
-
-    // 목표 시간과 실제 입력 시간의 차이
-    const error = inputTime - targetTime;
-
-    finishGame(inputTime, error);
+    // 게임 정지
+    stopGame();
 });
 
 
 // ========================================
-// 12. 등급 판정
+// 13. 등급 판정
 // ========================================
 
 function getGrade(errorMs) {
@@ -476,7 +513,7 @@ function getGrade(errorMs) {
 
 
 // ========================================
-// 13. 게임 결과 계산
+// 14. 게임 결과 계산
 // ========================================
 
 function finishGame(inputTime, error) {
@@ -557,8 +594,10 @@ function finishGame(inputTime, error) {
         playGradeSound(grade.name);
     }
 
-    // 게임 종료 후 버튼 활성화
+    // 게임 종료 후 시작 버튼 원래 상태로 복구
     startBtn.disabled = false;
+    startBtn.textContent = "게임 시작";
+
     duration.disabled = false;
 
     retryBtn.hidden = false;
@@ -566,7 +605,7 @@ function finishGame(inputTime, error) {
 
 
 // ========================================
-// 14. 등급별 효과음
+// 15. 등급별 효과음
 // ========================================
 
 function playGradeSound(gradeName) {
@@ -647,7 +686,7 @@ function playGradeSound(gradeName) {
 
 
 // ========================================
-// 15. PERFECT 축하 효과
+// 16. PERFECT 축하 효과
 // ========================================
 
 function celebrate() {
@@ -748,7 +787,7 @@ celebration.addEventListener("click", (event) => {
 
 
 // ========================================
-// 16. 다시 도전하기
+// 17. 다시 도전하기
 // ========================================
 
 // 다시 도전하기 버튼
@@ -757,7 +796,7 @@ retryBtn.addEventListener("click", resetGame);
 
 
 // ========================================
-// 17. Enter 키 처리
+// 18. Enter 키 처리
 // ========================================
 
 // Enter 키를 누르면 첫 게임 시작 또는 다시 도전
@@ -797,14 +836,14 @@ document.addEventListener("keydown", (event) => {
 
 
 // ========================================
-// 18. 상단 다시하기 버튼
+// 19. 상단 다시하기 버튼
 // ========================================
 
 resetBtn.addEventListener("click", resetGame);
 
 
 // ========================================
-// 19. 페이지 최초 실행
+// 20. 페이지 최초 실행
 // ========================================
 
 // 페이지가 열리면 게임 초기화
