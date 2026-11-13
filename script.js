@@ -11,6 +11,10 @@ const gradeTableBtn = document.getElementById("gradeTableBtn");
 const gradeModal = document.getElementById("gradeModal");
 const closeGradeBtn = document.getElementById("closeGradeBtn");
 
+const historyModal = document.getElementById("historyModal");
+const closeHistoryBtn = document.getElementById("closeHistoryBtn");
+const historyList = document.getElementById("historyList");
+
 const message = document.getElementById("message");
 
 const finalTimeDisplay = document.getElementById("finalTime");
@@ -31,9 +35,19 @@ let playing = false;
 // 효과음을 생성하기 위한 오디오 객체
 let audioContext = null;
 
+// PERFECT 축하 화면의 닫기 가능 여부와 타이머
+let celebrationCanClose = false;
+let celebrationTimeout = null;
+
+
+// 최근 기록을 저장하는 변수
+// 최대 10개의 기록을 유지
+// localStorage를 이용해 브라우저에 저장
+let gameRecords = loadRecords();
+
 
 // 등급별 이름과 오차 범위를 저장
-// maxError는 밀리초 단위이며, 1ms는 0.001초임
+// maxError는 밀리초 단위
 const grades = [
     { name: "PERFECT", maxError: 0, range: "0.000초" },
     { name: "EXCELLENT", maxError: 10, range: "0.001 ~ 0.010초" },
@@ -48,20 +62,117 @@ const grades = [
     { name: "CLOSE", maxError: 750, range: "0.501 ~ 0.750초" },
     { name: "ALMOST", maxError: 1000, range: "0.751 ~ 1.000초" },
     { name: "BAD", maxError: 1500, range: "1.001 ~ 1.500초" },
-    { name: "POOR", maxError: 2000, range: "1.501 ~ 2.000초" },
+    { name: "POOP", maxError: 2000, range: "1.501 ~ 2.000초" },
     { name: "TRY AGAIN", maxError: Infinity, range: "2.000초 초과" }
 ];
 
 
 // 시간을 소수점 셋째 자리까지 내림하여 표시
-// 넷째 자리부터는 표시와 판정에서 무시
 function formatTime(ms) {
     return (Math.floor(ms) / 1000).toFixed(3);
 }
 
 
+// 저장된 기록을 불러오는 함수
+function loadRecords() {
+
+    try {
+        const savedRecords = localStorage.getItem("timeChallengeRecords");
+
+        if (!savedRecords) return [];
+
+        const parsedRecords = JSON.parse(savedRecords);
+
+        // 배열인지 확인하고 최대 10개까지만 가져옴
+        if (!Array.isArray(parsedRecords)) return [];
+
+        return parsedRecords.slice(0, 10);
+
+    } catch (error) {
+
+        // 저장된 데이터에 문제가 있으면 빈 기록으로 시작
+        console.error("기록을 불러오지 못했습니다.", error);
+        return [];
+    }
+}
+
+
+// 새로운 기록을 브라우저에 저장
+function saveRecord(record) {
+
+    // 가장 최근 기록을 맨 앞에 추가
+    gameRecords.unshift(record);
+
+    // 최근 10개만 남김
+    gameRecords = gameRecords.slice(0, 10);
+
+    try {
+        localStorage.setItem(
+            "timeChallengeRecords",
+            JSON.stringify(gameRecords)
+        );
+
+    } catch (error) {
+
+        console.error("기록을 저장하지 못했습니다.", error);
+    }
+}
+
+
+// 최근 기록 팝업에 기록을 표시
+function renderHistory() {
+
+    // 기존에 표시된 기록을 비움
+    historyList.replaceChildren();
+
+    // 기록이 하나도 없는 경우
+    if (gameRecords.length === 0) {
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 4;
+        cell.className = "history-empty";
+        cell.textContent = "아직 저장된 기록이 없습니다.";
+
+        row.appendChild(cell);
+        historyList.appendChild(row);
+
+        return;
+    }
+
+    // 저장된 기록을 차례대로 표시
+    gameRecords.forEach((record) => {
+
+        const row = document.createElement("tr");
+
+        const timeCell = document.createElement("td");
+        const errorCell = document.createElement("td");
+        const scoreCell = document.createElement("td");
+        const gradeCell = document.createElement("td");
+
+        timeCell.textContent = record.time + "초";
+        errorCell.textContent = record.error + "초";
+        scoreCell.textContent = Number(record.score).toLocaleString();
+        gradeCell.textContent = record.grade;
+
+        gradeCell.className = "history-grade";
+
+        row.append(
+            timeCell,
+            errorCell,
+            scoreCell,
+            gradeCell
+        );
+
+        historyList.appendChild(row);
+    });
+}
+
+
 // 결과 화면과 축하 화면을 초기 상태로 되돌림
 function clearResults() {
+
     timer.textContent = "0.000";
 
     finalTimeDisplay.textContent = "-";
@@ -70,12 +181,18 @@ function clearResults() {
     gradeRangeDisplay.textContent = "-";
     scoreDisplay.textContent = "-";
 
+    // 축하 화면 타이머 초기화
+    clearTimeout(celebrationTimeout);
+    celebrationTimeout = null;
+
+    celebrationCanClose = false;
     celebration.hidden = true;
 }
 
 
 // 게임을 처음 상태로 초기화
 function resetGame() {
+
     playing = false;
 
     cancelAnimationFrame(animationId);
@@ -89,35 +206,92 @@ function resetGame() {
 
     retryBtn.hidden = true;
 
-    // 초기화할 때 등급표도 닫음
+    // 팝업도 닫음
     gradeModal.hidden = true;
+    historyModal.hidden = true;
 }
 
 
-// 등급표 버튼을 누르면 등급표를 표시
+// 등급표 버튼을 누르면 등급표 표시
 gradeTableBtn.addEventListener("click", () => {
     gradeModal.hidden = false;
 });
 
 
-// 등급표 닫기 버튼을 누르면 팝업을 닫음
+// 등급표 닫기 버튼
 closeGradeBtn.addEventListener("click", () => {
     gradeModal.hidden = true;
 });
 
 
-// 등급표 바깥쪽 배경을 눌러도 팝업을 닫음
+// 등급표 바깥쪽을 누르면 닫기
 gradeModal.addEventListener("click", (event) => {
+
     if (event.target === gradeModal) {
         gradeModal.hidden = true;
     }
 });
 
 
-// ESC 키를 누르면 등급표를 닫음
+// 최근 기록 닫기 버튼
+closeHistoryBtn.addEventListener("click", () => {
+    historyModal.hidden = true;
+});
+
+
+// 최근 기록 팝업 바깥쪽을 누르면 닫기
+historyModal.addEventListener("click", (event) => {
+
+    if (event.target === historyModal) {
+        historyModal.hidden = true;
+    }
+});
+
+
+// R 키를 눌러 최근 기록 확인
 document.addEventListener("keydown", (event) => {
+
+    // R 키가 아니면 무시
+    if (event.key.toLowerCase() !== "r") return;
+
+    // 게임 진행 중에는 무시
+    if (playing) return;
+
+    // PERFECT 축하 화면이 표시되는 동안에는 무시
+    if (!celebration.hidden) return;
+
+    // 등급표가 열려 있으면 무시
+    if (!gradeModal.hidden) return;
+
+    // 입력창에 글자를 입력하는 중이면 무시
+    const activeElement = document.activeElement;
+
+    if (
+        activeElement &&
+        ["INPUT", "TEXTAREA", "SELECT"].includes(activeElement.tagName)
+    ) {
+        return;
+    }
+
+    // R 키를 계속 누르고 있어도 한 번만 실행
+    if (event.repeat) return;
+
+    event.preventDefault();
+
+    // 최근 기록을 최신 상태로 다시 표시
+    renderHistory();
+
+    // 기록 팝업 열기
+    historyModal.hidden = false;
+});
+
+
+// ESC 키를 누르면 모든 팝업 닫기
+document.addEventListener("keydown", (event) => {
+
     if (event.key === "Escape") {
         gradeModal.hidden = true;
+        historyModal.hidden = true;
     }
 });
 
@@ -130,7 +304,7 @@ startBtn.addEventListener("click", () => {
 
     const inputDuration = Number(duration.value);
 
-    // 목표 시간 입력값이 올바른지 검사
+    // 목표 시간 입력값 검사
     if (
         !Number.isFinite(inputDuration) ||
         inputDuration < 0.01 ||
@@ -152,7 +326,7 @@ startBtn.addEventListener("click", () => {
 
     message.textContent = "목표 시간에 맞춰 SPACE!";
 
-    // 게임 중에는 목표 시간 변경과 시작 버튼 사용을 막음
+    // 게임 중에는 입력창과 시작 버튼 사용을 막음
     startBtn.disabled = true;
     duration.disabled = true;
 
@@ -166,15 +340,12 @@ startBtn.addEventListener("click", () => {
 // 화면에 경과 시간을 실시간으로 표시
 function updateTimer() {
 
-    // 게임이 종료되었다면 타이머를 업데이트하지 않음
     if (!playing) return;
 
     const elapsed = performance.now() - startTime;
 
-    // 소수점 셋째 자리까지 표시
     timer.textContent = formatTime(elapsed);
 
-    // 다음 화면 갱신 때 다시 실행
     animationId = requestAnimationFrame(updateTimer);
 }
 
@@ -182,33 +353,29 @@ function updateTimer() {
 // 스페이스바 입력을 감지하여 게임 종료
 document.addEventListener("keydown", (event) => {
 
-    // 스페이스바가 아닌 키는 무시
     if (event.code !== "Space") return;
 
-    // 게임이 진행 중이 아니면 무시
     if (!playing) return;
 
-    // 스페이스바를 눌렀을 때 페이지가 스크롤되는 것을 방지
+    // 페이지 스크롤 방지
     event.preventDefault();
 
-    // 스페이스바를 계속 누르고 있어도 한 번만 입력되도록 설정
+    // 키를 계속 누르고 있어도 한 번만 입력
     if (event.repeat) return;
 
-    // 스페이스바를 누른 시점의 경과 시간 계산
+    // 스페이스바를 누른 시점의 경과 시간
     const inputTime = performance.now() - startTime;
 
-    // 목표 시간과 실제 입력 시간의 차이 계산
+    // 목표 시간과 실제 시간의 차이
     const error = inputTime - targetTime;
 
-    // 게임 종료 및 결과 계산
     finishGame(inputTime, error);
 });
 
 
-// 오차에 따라 등급을 결정하는 함수
+// 오차에 따라 등급을 결정
 function getGrade(errorMs) {
 
-    // 등급 목록을 위에서부터 확인하여 해당 등급을 찾음
     for (const grade of grades) {
 
         if (errorMs <= grade.maxError) {
@@ -216,48 +383,48 @@ function getGrade(errorMs) {
         }
     }
 
-    // 기본적으로 마지막 등급을 반환
     return grades[grades.length - 1];
 }
 
 
-// 게임 종료 후 결과를 계산하고 표시
+// 게임 종료 후 결과 계산 및 표시
 function finishGame(inputTime, error) {
 
     playing = false;
 
-    // 타이머 갱신 중단
     cancelAnimationFrame(animationId);
 
     // 최종 입력 시간 표시
-    timer.textContent = formatTime(inputTime);
-    finalTimeDisplay.textContent = formatTime(inputTime) + "초";
+    const formattedTime = formatTime(inputTime);
+
+    timer.textContent = formattedTime;
+    finalTimeDisplay.textContent = formattedTime + "초";
 
     // 오차의 절댓값을 밀리초 단위로 계산
-    // 소수점 아래 밀리초는 버려서 0.001초 단위까지만 인정
+    // 소수점 아래 밀리초는 버림
     const errorMs = Math.floor(Math.abs(error));
 
     // 오차를 초 단위로 변환
     const displayedError = errorMs / 1000;
 
-    // 목표 시간보다 빠르면 음수, 늦으면 양수로 표시
+    // 빠르면 음수, 늦으면 양수
     const sign =
         error > 0 ? "+" :
         error < 0 ? "-" : "";
 
-    // 소수점 셋째 자리까지 오차 표시
-    errorDisplay.textContent =
-        sign + displayedError.toFixed(3) + "초";
+    const formattedError = sign + displayedError.toFixed(3);
+
+    errorDisplay.textContent = formattedError + "초";
 
 
-    // 계산된 오차를 기준으로 등급 판정
+    // 등급 판정
     const grade = getGrade(errorMs);
 
     gradeDisplay.textContent = grade.name;
     gradeRangeDisplay.textContent = grade.range;
 
 
-    // 오차가 커질수록 점수가 낮아지는 점수 계산
+    // 점수 계산
     // 오차가 0.1초 증가할 때마다 점수가 절반으로 감소
     const score = Math.round(
         1000 * Math.pow(0.5, errorMs / 100)
@@ -266,7 +433,16 @@ function finishGame(inputTime, error) {
     scoreDisplay.textContent = score.toLocaleString() + "점";
 
 
-    // PERFECT일 경우 특별한 축하 화면 표시
+    // 최근 기록 저장
+    saveRecord({
+        time: formattedTime,
+        error: formattedError,
+        score: score,
+        grade: grade.name
+    });
+
+
+    // PERFECT일 경우 축하 화면
     if (grade.name === "PERFECT") {
 
         message.textContent = "완벽한 타이밍!";
@@ -281,12 +457,11 @@ function finishGame(inputTime, error) {
             message.textContent = "목표 시간보다 늦게 눌렀어요!";
         }
 
-        // PERFECT가 아니어도 해당 등급의 효과음 재생
         playGradeSound(grade.name);
     }
 
 
-    // 게임이 끝났으므로 버튼을 다시 활성화
+    // 게임 종료 후 버튼 활성화
     startBtn.disabled = false;
     duration.disabled = false;
 
@@ -294,28 +469,23 @@ function finishGame(inputTime, error) {
 }
 
 
-// 등급마다 다른 음계와 패턴으로 효과음을 생성
+// 등급마다 다른 효과음 생성
 function playGradeSound(gradeName) {
 
-    // 브라우저의 오디오 기능을 가져옴
     const AudioContextClass =
         window.AudioContext || window.webkitAudioContext;
 
-    // 지원하지 않는 브라우저에서는 효과음을 생략
     if (!AudioContextClass) return;
 
-    // 오디오 객체가 없으면 새로 생성
     if (!audioContext) {
         audioContext = new AudioContextClass();
     }
 
-    // 브라우저에서 오디오가 일시 중지된 경우 다시 실행
     if (audioContext.state === "suspended") {
         audioContext.resume();
     }
 
-    // 등급별로 재생할 음의 높이를 설정
-    // 숫자가 클수록 높은 음
+    // 등급별 음계
     const soundPatterns = {
 
         "EXCELLENT": [1046.50, 1318.51],
@@ -330,42 +500,32 @@ function playGradeSound(gradeName) {
         "CLOSE": [493.88, 587.33],
         "ALMOST": [440.00, 523.25],
         "BAD": [392.00, 349.23],
-        "POOR": [329.63, 293.66],
+        "POOP": [329.63, 293.66],
         "TRY AGAIN": [261.63, 196.00]
     };
 
-    // 현재 등급에 해당하는 음계 가져오기
     const notes = soundPatterns[gradeName];
 
-    // 음계가 없으면 재생하지 않음
     if (!notes) return;
 
-    // 오디오가 시작될 시각
     const start = audioContext.currentTime;
 
-    // 등급에 따라 음색 변경
+    // 낮은 등급은 톱니파, 나머지는 삼각파 사용
     const type =
-        ["BAD", "POOR", "TRY AGAIN"].includes(gradeName)
+        ["BAD", "POOP", "TRY AGAIN"].includes(gradeName)
             ? "sawtooth"
             : "triangle";
 
-    // 음계들을 차례대로 재생
     notes.forEach((frequency, index) => {
 
-        // 음을 생성하는 발진기
         const oscillator = audioContext.createOscillator();
-
-        // 음량을 조절하는 객체
         const gain = audioContext.createGain();
 
-        // 음의 높이와 종류 설정
         oscillator.frequency.value = frequency;
         oscillator.type = type;
 
-        // 각 음의 재생 시작 시각
         const noteStart = start + index * 0.13;
 
-        // 음량을 부드럽게 키웠다가 줄임
         gain.gain.setValueAtTime(0.001, noteStart);
 
         gain.gain.exponentialRampToValueAtTime(
@@ -378,41 +538,57 @@ function playGradeSound(gradeName) {
             noteStart + 0.22
         );
 
-        // 발진기와 음량 조절기를 연결
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
 
-        // 음 재생 시작과 종료
         oscillator.start(noteStart);
         oscillator.stop(noteStart + 0.23);
     });
 }
 
 
-// PERFECT를 달성했을 때 실행되는 축하 효과
+// PERFECT 축하 효과
 function celebrate() {
 
     // 축하 화면 표시
     celebration.hidden = false;
 
-    // PERFECT 전용 축하 음계 재생
+    celebrationCanClose = false;
+
+    // 처음 3초 동안은 축하 화면을 유지
+    const celebrationMessage =
+        celebration.querySelector("p");
+
+    celebrationMessage.textContent = "완벽한 타이밍!";
+
+    clearTimeout(celebrationTimeout);
+
+    celebrationTimeout = setTimeout(() => {
+
+        // 3초가 지난 후 클릭으로 닫을 수 있게 설정
+        celebrationCanClose = true;
+
+        celebrationMessage.textContent =
+            "아무 곳이나 클릭하여 닫기";
+
+    }, 3000);
+
+
+    // PERFECT 전용 효과음
     const AudioContextClass =
         window.AudioContext || window.webkitAudioContext;
 
-    // 브라우저에서 오디오를 지원하지 않으면 화면 효과만 표시
     if (!AudioContextClass) return;
 
-    // 오디오 객체 생성
     if (!audioContext) {
         audioContext = new AudioContextClass();
     }
 
-    // 오디오가 중지되어 있으면 다시 실행
     if (audioContext.state === "suspended") {
         audioContext.resume();
     }
 
-    // PERFECT 전용 밝은 상승 음계
+    // 밝은 상승 음계
     const notes = [
         523.25,
         659.25,
@@ -421,20 +597,16 @@ function celebrate() {
         1318.51
     ];
 
-    // 음계를 차례대로 재생
     notes.forEach((frequency, index) => {
 
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
 
-        // 음색을 삼각파로 설정
         oscillator.frequency.value = frequency;
         oscillator.type = "triangle";
 
-        // 음마다 재생 시각을 다르게 설정
         const time = audioContext.currentTime + index * 0.14;
 
-        // 음량을 부드럽게 조절
         gain.gain.setValueAtTime(0.001, time);
 
         gain.gain.exponentialRampToValueAtTime(
@@ -447,19 +619,33 @@ function celebrate() {
             time + 0.35
         );
 
-        // 오디오 연결
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
 
-        // 음 재생
         oscillator.start(time);
         oscillator.stop(time + 0.36);
     });
 }
 
 
+// 축하 화면을 클릭하면 닫기
+celebration.addEventListener("click", () => {
+
+    // 3초가 지나기 전에는 닫히지 않음
+    if (!celebrationCanClose) return;
+
+    clearTimeout(celebrationTimeout);
+
+    celebrationTimeout = null;
+    celebrationCanClose = false;
+
+    celebration.hidden = true;
+});
+
+
 // 다시 도전하기 버튼을 누르면 게임 초기화
 retryBtn.addEventListener("click", resetGame);
+
 
 // 게임 결과 화면에서 Enter 키를 누르면 즉시 다시 시작
 document.addEventListener("keydown", (event) => {
@@ -468,22 +654,32 @@ document.addEventListener("keydown", (event) => {
 
     if (event.repeat) return;
 
-    // 게임 진행 중이거나 등급표가 열려 있으면 무시
-    if (playing || !gradeModal.hidden) return;
+    // 게임 진행 중이면 무시
+    if (playing) return;
+
+    // 팝업이 열려 있으면 무시
+    if (!gradeModal.hidden || !historyModal.hidden) return;
+
+    // 축하 화면이 표시 중이면 무시
+    if (!celebration.hidden) return;
 
     // 결과 화면에서만 실행
     if (!retryBtn.hidden) {
+
         event.preventDefault();
 
-        // 게임 초기화 후 시작 버튼을 자동으로 클릭
         resetGame();
         startBtn.click();
     }
 });
 
-// 오른쪽 상단 다시하기 버튼을 누르면 게임 초기화
+
+// 오른쪽 상단 다시하기 버튼
 resetBtn.addEventListener("click", resetGame);
 
 
 // 페이지가 처음 열렸을 때 초기 상태 설정
 resetGame();
+
+// 저장된 기록을 화면에 반영할 수 있도록 준비
+renderHistory();

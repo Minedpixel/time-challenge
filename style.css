@@ -7,7 +7,7 @@
     font-family: Arial, sans-serif;
 }
 
-/* 전체 페이지의 배경과 가운데 정렬 설정 */
+/* 전체 페이지 배경과 가운데 정렬 */
 body {
     min-height: 100vh;
     display: flex;
@@ -18,7 +18,7 @@ body {
     padding: 20px;
 }
 
-/* 게임 전체를 감싸는 상자 디자인 */
+/* 게임 전체 영역 */
 .game-container {
     position: relative;
     width: 100%;
@@ -30,14 +30,14 @@ body {
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
 }
 
-/* 상단의 등급표와 다시하기 버튼 배치 */
+/* 상단 버튼 배치 */
 .top-bar {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
 }
 
-/* 모든 버튼의 공통 디자인 */
+/* 공통 버튼 디자인 */
 button {
     border: none;
     border-radius: 8px;
@@ -46,13 +46,12 @@ button {
     transition: 0.2s;
 }
 
-/* 비활성화된 버튼의 모양 */
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* 왼쪽 상단 등급표 버튼 */
+/* 등급표 버튼 */
 .grade-table-btn {
     padding: 9px 15px;
     background: #7c3aed;
@@ -63,7 +62,7 @@ button:disabled {
     background: #6d28d9;
 }
 
-/* 오른쪽 상단 다시하기 버튼 */
+/* 다시하기 버튼 */
 .reset-btn {
     padding: 9px 15px;
     background: #475569;
@@ -74,19 +73,19 @@ button:disabled {
     background: #64748b;
 }
 
-/* 게임 제목 디자인 */
+/* 제목 */
 h1 {
     font-size: 30px;
     letter-spacing: 2px;
 }
 
-/* 게임 설명 문구 디자인 */
+/* 설명 */
 .subtitle {
     margin-top: 10px;
     color: #94a3b8;
 }
 
-/* 목표 시간 입력 영역 배치 */
+/* 목표 시간 입력 영역 */
 .settings {
     margin-top: 30px;
     display: flex;
@@ -95,7 +94,6 @@ h1 {
     gap: 10px;
 }
 
-/* 목표 시간 입력 안내 문구 */
 .settings label {
     color: #cbd5e1;
 }
@@ -112,7 +110,7 @@ h1 {
     text-align: center;
 }
 
-/* 실시간 타이머 숫자 디자인 */
+/* 타이머 */
 #timer {
     margin-top: 35px;
     font-size: 65px;
@@ -121,14 +119,14 @@ h1 {
     font-variant-numeric: tabular-nums;
 }
 
-/* 게임 진행 메시지 영역 */
+/* 안내 메시지 */
 #message {
     min-height: 25px;
     margin-top: 15px;
     color: #cbd5e1;
 }
 
-/* 게임 시작 버튼 */
+/* 시작 버튼 */
 .start-btn {
     width: 100%;
     margin-top: 25px;
@@ -142,7 +140,7 @@ h1 {
     background: #1d4ed8;
 }
 
-/* 결과를 두 열로 나누어 배치 */
+/* 결과 영역 */
 .result {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -153,7 +151,6 @@ h1 {
     border-radius: 12px;
 }
 
-/* 결과 항목 각각의 배치 */
 .result div {
     display: flex;
     flex-direction: column;
@@ -161,25 +158,21 @@ h1 {
     gap: 10px;
 }
 
-/* 결과 항목의 설명 문구 */
 .result span {
     color: #94a3b8;
     font-size: 13px;
 }
 
-/* 결과 숫자와 등급 이름 */
 .result strong {
     font-size: 20px;
     overflow-wrap: anywhere;
 }
 
-/* 등급 범위 설명 */
 .result small {
     color: #94a3b8;
     font-size: 12px;
 }
 
-/* 등급 이름 강조 */
 #grade {
     color: #facc15;
 }
@@ -197,7 +190,7 @@ h1 {
     background: #64748b;
 }
 
-/* 등급표 팝업의 배경 */
+/* 팝업 배경 */
 .modal {
     position: fixed;
     inset: 0;
@@ -209,12 +202,11 @@ h1 {
     background: rgba(0, 0, 0, 0.75);
 }
 
-/* hidden 속성이 있을 때 팝업을 완전히 숨김 */
 .modal[hidden] {
     display: none;
 }
 
-/* 등급표 내부 상자 */
+/* 팝업 내부 상자 */
 .modal-content {
     width: 100%;
     max-width: 400px;
@@ -225,7 +217,7 @@ h1 {
     border-radius: 15px;
 }
 
-/* 등급표 제목과 닫기 버튼 배치 */
+/* 팝업 제목과 닫기 버튼 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -237,7 +229,7 @@ h1 {
     font-size: 23px;
 }
 
-/* 등급표 닫기 버튼 */
+/* 닫기 버튼 */
 .close-btn {
     padding: 7px 11px;
     background: #475569;
@@ -248,14 +240,14 @@ h1 {
     background: #64748b;
 }
 
-/* 등급별 항목을 세로로 배치 */
+/* 등급 목록 */
 .grade-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-/* 등급 이름과 오차 범위를 한 줄에 표시 */
+/* 등급별 행 */
 .grade-row {
     display: flex;
     justify-content: space-between;
@@ -267,7 +259,6 @@ h1 {
     font-size: 13px;
 }
 
-/* 등급 이름과 오차 범위의 글자 크기 */
 .grade-row strong {
     font-size: 13px;
 }
@@ -291,10 +282,78 @@ h1 {
 .close strong { color: #facc15; }
 .almost strong { color: #fbbf24; }
 .bad strong { color: #fb923c; }
-.poor strong { color: #f87171; }
+.poop strong { color: #f87171; }
 .try-again strong { color: #94a3b8; }
 
-/* PERFECT 달성 시 화면 전체에 표시되는 축하 배경 */
+
+/* 최근 기록 팝업을 등급표보다 위에 표시 */
+.history-modal {
+    z-index: 30;
+}
+
+/* 최근 기록 팝업 너비 */
+.history-content {
+    max-width: 550px;
+}
+
+/* 기록 안내 문구 */
+.history-guide {
+    margin: -8px 0 18px;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* 기록 표 가로 스크롤 */
+.history-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* 기록 표 */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* 표 제목 */
+.history-table th {
+    padding: 12px 8px;
+    background: #0f172a;
+    color: #94a3b8;
+    font-weight: normal;
+}
+
+/* 표 데이터 */
+.history-table td {
+    padding: 13px 8px;
+    border-bottom: 1px solid #334155;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 등급 글자 강조 */
+.history-table .history-grade {
+    color: #facc15;
+    font-weight: bold;
+}
+
+/* 기록이 없을 때 */
+.history-empty {
+    padding: 25px 8px !important;
+    color: #94a3b8;
+}
+
+/* 기록 단축키 안내 */
+.history-shortcut {
+    margin-top: 18px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+
+/* PERFECT 축하 화면 */
 #celebration {
     position: fixed;
     inset: 0;
@@ -304,36 +363,33 @@ h1 {
     align-items: center;
     background: rgba(0, 0, 0, 0.8);
 
-    /* 축하 화면이 다시하기 버튼 등의 클릭을 막지 않게 함 */
-    pointer-events: none;
+    /* 3초가 지나면 클릭을 받을 수 있도록 설정 */
+    pointer-events: auto;
 }
 
-/* 축하 화면 숨김 처리 */
 #celebration[hidden] {
     display: none;
 }
 
-/* 축하 문구의 애니메이션과 배치 */
+/* 축하 문구 */
 .celebration-content {
     padding: 40px;
     text-align: center;
     animation: pop 0.5s ease;
 }
 
-/* PERFECT 글자 디자인 */
 .celebration-content h2 {
     color: #facc15;
     font-size: 35px;
 }
 
-/* 축하 메시지 디자인 */
 .celebration-content p {
     margin-top: 15px;
     font-size: 24px;
     font-weight: bold;
 }
 
-/* 축하 문구가 작게 나타나 커지는 애니메이션 */
+/* 축하 문구 애니메이션 */
 @keyframes pop {
     from {
         transform: scale(0.5);
@@ -346,7 +402,7 @@ h1 {
     }
 }
 
-/* 화면이 작은 휴대전화에서 글자와 여백 조정 */
+/* 작은 화면 대응 */
 @media (max-width: 400px) {
     .game-container {
         padding: 20px;
@@ -362,5 +418,14 @@ h1 {
 
     .modal-content {
         padding: 18px;
+    }
+
+    .history-table {
+        font-size: 12px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 10px 5px;
     }
 }

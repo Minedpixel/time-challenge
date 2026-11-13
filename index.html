@@ -5,18 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- 브라우저 탭에 표시될 제목 -->
     <title>TIME CHALLENGE</title>
-
-    <!-- CSS 디자인 파일 연결 -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 게임의 전체 영역 -->
     <main class="game-container">
 
-        <!-- 왼쪽 등급표 버튼과 오른쪽 다시하기 버튼 -->
         <div class="top-bar">
             <button id="gradeTableBtn" class="grade-table-btn">
                 등급표
@@ -27,11 +22,9 @@
             </button>
         </div>
 
-        <!-- 게임 제목과 설명 -->
         <h1>TIME CHALLENGE</h1>
         <p class="subtitle">정확한 순간을 맞혀보세요!</p>
 
-        <!-- 사용자가 목표 시간을 설정하는 영역 -->
         <section class="settings">
             <label for="duration">목표 시간 설정 (초)</label>
 
@@ -45,18 +38,14 @@
             >
         </section>
 
-        <!-- 실시간으로 경과 시간을 표시하는 부분 -->
         <div id="timer">0.000</div>
 
-        <!-- 게임 진행 상황을 안내하는 메시지 -->
         <p id="message">게임 시작 버튼을 눌러주세요.</p>
 
-        <!-- 게임을 시작하는 버튼 -->
         <button id="startBtn" class="start-btn">
             게임 시작
         </button>
 
-        <!-- 게임 종료 후 결과를 보여주는 영역 -->
         <div class="result">
 
             <div>
@@ -82,7 +71,6 @@
 
         </div>
 
-        <!-- 게임 종료 후 다시 도전할 수 있는 버튼 -->
         <button id="retryBtn" class="retry-btn" hidden>
             다시 도전하기
         </button>
@@ -90,12 +78,11 @@
     </main>
 
 
-    <!-- 등급표 팝업 화면 -->
+    <!-- 등급표 팝업 -->
     <div id="gradeModal" class="modal" hidden>
 
         <div class="modal-content">
 
-            <!-- 등급표 제목과 닫기 버튼 -->
             <div class="modal-header">
                 <h2>등급표</h2>
 
@@ -104,7 +91,6 @@
                 </button>
             </div>
 
-            <!-- 15개 등급과 각각의 오차 범위 -->
             <div class="grade-list">
 
                 <div class="grade-row perfect">
@@ -172,8 +158,8 @@
                     <span>1.001 ~ 1.500초</span>
                 </div>
 
-                <div class="grade-row poor">
-                    <strong>POOR</strong>
+                <div class="grade-row poop">
+                    <strong>POOP</strong>
                     <span>1.501 ~ 2.000초</span>
                 </div>
 
@@ -187,15 +173,63 @@
     </div>
 
 
-    <!-- PERFECT 달성 시 나타나는 축하 화면 -->
+    <!-- 최근 기록 팝업 -->
+    <div id="historyModal" class="modal history-modal" hidden>
+
+        <div class="modal-content history-content">
+
+            <div class="modal-header">
+                <h2>최근 기록</h2>
+
+                <button id="closeHistoryBtn" class="close-btn">
+                    ✕
+                </button>
+            </div>
+
+            <p class="history-guide">
+                최근 플레이한 기록 최대 10개
+            </p>
+
+            <div class="history-table-wrap">
+
+                <table class="history-table">
+
+                    <thead>
+                        <tr>
+                            <th>시간</th>
+                            <th>오차</th>
+                            <th>점수</th>
+                            <th>등급</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="historyList">
+                        <!-- JavaScript에서 기록을 표시 -->
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <p class="history-shortcut">
+                R 키를 눌러 기록을 확인할 수 있습니다.
+            </p>
+
+        </div>
+    </div>
+
+
+    <!-- PERFECT 축하 화면 -->
     <div id="celebration" hidden>
+
         <div class="celebration-content">
             <h2>🎉 PERFECT! 🎉</h2>
             <p>완벽한 타이밍!</p>
         </div>
+
     </div>
 
-    <!-- JavaScript 기능 파일 연결 -->
+
     <script src="script.js"></script>
 
 </body>
