@@ -119,6 +119,20 @@ h1 {
     font-variant-numeric: tabular-nums;
 }
 
+/* PERFECT 달성 메시지 */
+#achievement {
+    margin-top: 12px;
+    color: #facc15;
+    font-size: 23px;
+    font-weight: bold;
+    text-shadow: 0 0 15px rgba(250, 204, 21, 0.35);
+    animation: pop 0.5s ease;
+}
+
+#achievement[hidden] {
+    display: none;
+}
+
 /* 안내 메시지 */
 #message {
     min-height: 25px;
@@ -285,7 +299,6 @@ h1 {
 .poop strong { color: #f87171; }
 .try-again strong { color: #94a3b8; }
 
-
 /* 최근 기록 팝업을 등급표보다 위에 표시 */
 .history-modal {
     z-index: 30;
@@ -352,7 +365,6 @@ h1 {
     font-size: 12px;
 }
 
-
 /* PERFECT 축하 화면 */
 #celebration {
     position: fixed;
@@ -362,8 +374,6 @@ h1 {
     justify-content: center;
     align-items: center;
     background: rgba(0, 0, 0, 0.8);
-
-    /* 3초가 지나면 클릭을 받을 수 있도록 설정 */
     pointer-events: auto;
 }
 
@@ -414,6 +424,10 @@ h1 {
 
     #timer {
         font-size: 50px;
+    }
+
+    #achievement {
+        font-size: 19px;
     }
 
     .modal-content {

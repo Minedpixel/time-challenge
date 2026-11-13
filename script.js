@@ -24,6 +24,7 @@ const gradeRangeDisplay = document.getElementById("gradeRange");
 const scoreDisplay = document.getElementById("score");
 
 const celebration = document.getElementById("celebration");
+const achievement = document.getElementById("achievement");
 
 
 // 게임 진행 상태를 저장하는 변수
@@ -41,8 +42,6 @@ let celebrationTimeout = null;
 
 
 // 최근 기록을 저장하는 변수
-// 최대 10개의 기록을 유지
-// localStorage를 이용해 브라우저에 저장
 let gameRecords = loadRecords();
 
 
@@ -72,6 +71,7 @@ function formatTime(ms) {
     return (Math.round(ms) / 1000).toFixed(3);
 }
 
+
 // 저장된 기록을 불러오는 함수
 function loadRecords() {
 
@@ -82,14 +82,12 @@ function loadRecords() {
 
         const parsedRecords = JSON.parse(savedRecords);
 
-        // 배열인지 확인하고 최대 10개까지만 가져옴
         if (!Array.isArray(parsedRecords)) return [];
 
         return parsedRecords.slice(0, 10);
 
     } catch (error) {
 
-        // 저장된 데이터에 문제가 있으면 빈 기록으로 시작
         console.error("기록을 불러오지 못했습니다.", error);
         return [];
     }
@@ -99,7 +97,6 @@ function loadRecords() {
 // 새로운 기록을 브라우저에 저장
 function saveRecord(record) {
 
-    // 가장 최근 기록을 맨 앞에 추가
     gameRecords.unshift(record);
 
     // 최근 10개만 남김
@@ -121,10 +118,8 @@ function saveRecord(record) {
 // 최근 기록 팝업에 기록을 표시
 function renderHistory() {
 
-    // 기존에 표시된 기록을 비움
     historyList.replaceChildren();
 
-    // 기록이 하나도 없는 경우
     if (gameRecords.length === 0) {
 
         const row = document.createElement("tr");
@@ -140,7 +135,6 @@ function renderHistory() {
         return;
     }
 
-    // 저장된 기록을 차례대로 표시
     gameRecords.forEach((record) => {
 
         const row = document.createElement("tr");
@@ -179,6 +173,10 @@ function clearResults() {
     gradeDisplay.textContent = "-";
     gradeRangeDisplay.textContent = "-";
     scoreDisplay.textContent = "-";
+
+    // PERFECT 메시지도 초기화
+    achievement.hidden = true;
+    achievement.textContent = "👑 타이밍의 왕! 👑";
 
     // 축하 화면 타이머 초기화
     clearTimeout(celebrationTimeout);
@@ -250,8 +248,9 @@ historyModal.addEventListener("click", (event) => {
 // R 키를 눌러 최근 기록 확인
 document.addEventListener("keydown", (event) => {
 
-    // R 키가 아니면 무시
     if (event.key.toLowerCase() !== "r") return;
+
+    if (event.repeat) return;
 
     // 게임 진행 중에는 무시
     if (playing) return;
@@ -259,8 +258,8 @@ document.addEventListener("keydown", (event) => {
     // PERFECT 축하 화면이 표시되는 동안에는 무시
     if (!celebration.hidden) return;
 
-    // 등급표가 열려 있으면 무시
-    if (!gradeModal.hidden) return;
+    // 다른 팝업이 열려 있으면 무시
+    if (!gradeModal.hidden || !historyModal.hidden) return;
 
     // 입력창에 글자를 입력하는 중이면 무시
     const activeElement = document.activeElement;
@@ -272,15 +271,10 @@ document.addEventListener("keydown", (event) => {
         return;
     }
 
-    // R 키를 계속 누르고 있어도 한 번만 실행
-    if (event.repeat) return;
-
     event.preventDefault();
 
-    // 최근 기록을 최신 상태로 다시 표시
     renderHistory();
 
-    // 기록 팝업 열기
     historyModal.hidden = false;
 });
 
@@ -298,7 +292,6 @@ document.addEventListener("keydown", (event) => {
 // 게임 시작 버튼을 눌렀을 때 실행
 startBtn.addEventListener("click", () => {
 
-    // 이미 게임이 진행 중이면 시작하지 않음
     if (playing) return;
 
     const inputDuration = Number(duration.value);
@@ -325,13 +318,11 @@ startBtn.addEventListener("click", () => {
 
     message.textContent = "목표 시간에 맞춰 SPACE!";
 
-    // 게임 중에는 입력창과 시작 버튼 사용을 막음
     startBtn.disabled = true;
     duration.disabled = true;
 
     retryBtn.hidden = true;
 
-    // 타이머 업데이트 시작
     updateTimer();
 });
 
@@ -356,16 +347,12 @@ document.addEventListener("keydown", (event) => {
 
     if (!playing) return;
 
-    // 페이지 스크롤 방지
     event.preventDefault();
 
-    // 키를 계속 누르고 있어도 한 번만 입력
     if (event.repeat) return;
 
-    // 스페이스바를 누른 시점의 경과 시간
     const inputTime = performance.now() - startTime;
 
-    // 목표 시간과 실제 시간의 차이
     const error = inputTime - targetTime;
 
     finishGame(inputTime, error);
@@ -393,20 +380,18 @@ function finishGame(inputTime, error) {
 
     cancelAnimationFrame(animationId);
 
-    // 최종 입력 시간 표시
+    // 최종 입력 시간을 소수점 셋째 자리까지 반올림
     const formattedTime = formatTime(inputTime);
 
     timer.textContent = formattedTime;
     finalTimeDisplay.textContent = formattedTime + "초";
 
     // 오차의 절댓값을 밀리초 단위로 계산
-    // 소수점 아래 밀리초는 버림
+    // 기존 규칙에 따라 소수점 아래 밀리초는 버림
     const errorMs = Math.floor(Math.abs(error));
 
-    // 오차를 초 단위로 변환
     const displayedError = errorMs / 1000;
 
-    // 빠르면 음수, 늦으면 양수
     const sign =
         error > 0 ? "+" :
         error < 0 ? "-" : "";
@@ -424,7 +409,6 @@ function finishGame(inputTime, error) {
 
 
     // 점수 계산
-    // 오차가 0.1초 증가할 때마다 점수가 절반으로 감소
     const score = Math.round(
         1000 * Math.pow(0.5, errorMs / 100)
     );
@@ -441,15 +425,22 @@ function finishGame(inputTime, error) {
     });
 
 
-    // PERFECT일 경우 축하 화면
+    // PERFECT일 경우 특별한 메시지와 축하 화면 표시
     if (grade.name === "PERFECT") {
 
         message.textContent = "완벽한 타이밍!";
+
+        // 타이머 아래에 특별 메시지를 계속 표시
+        achievement.textContent = "👑 타이밍의 왕! 👑";
+        achievement.hidden = false;
+
         celebrate();
 
     } else {
 
-        // 목표 시간보다 빨랐는지 늦었는지 안내
+        // PERFECT가 아니면 특별 메시지를 표시하지 않음
+        achievement.hidden = true;
+
         if (error < 0) {
             message.textContent = "목표 시간보다 일찍 눌렀어요!";
         } else {
@@ -509,7 +500,6 @@ function playGradeSound(gradeName) {
 
     const start = audioContext.currentTime;
 
-    // 낮은 등급은 톱니파, 나머지는 삼각파 사용
     const type =
         ["BAD", "POOP", "TRY AGAIN"].includes(gradeName)
             ? "sawtooth"
@@ -549,12 +539,10 @@ function playGradeSound(gradeName) {
 // PERFECT 축하 효과
 function celebrate() {
 
-    // 축하 화면 표시
     celebration.hidden = false;
 
     celebrationCanClose = false;
 
-    // 처음 3초 동안은 축하 화면을 유지
     const celebrationMessage =
         celebration.querySelector("p");
 
@@ -562,9 +550,9 @@ function celebrate() {
 
     clearTimeout(celebrationTimeout);
 
+    // 3초 후 클릭하여 닫을 수 있도록 설정
     celebrationTimeout = setTimeout(() => {
 
-        // 3초가 지난 후 클릭으로 닫을 수 있게 설정
         celebrationCanClose = true;
 
         celebrationMessage.textContent =
@@ -628,7 +616,10 @@ function celebrate() {
 
 
 // 축하 화면을 클릭하면 닫기
-celebration.addEventListener("click", () => {
+celebration.addEventListener("click", (event) => {
+
+    // 클릭 이벤트가 다른 요소로 전달되지 않도록 방지
+    event.stopPropagation();
 
     // 3초가 지나기 전에는 닫히지 않음
     if (!celebrationCanClose) return;
@@ -638,6 +629,8 @@ celebration.addEventListener("click", () => {
     celebrationTimeout = null;
     celebrationCanClose = false;
 
+    // 축하 팝업만 닫음
+    // timer와 결과 데이터는 절대 초기화하지 않음
     celebration.hidden = true;
 });
 
@@ -653,7 +646,6 @@ document.addEventListener("keydown", (event) => {
 
     if (event.repeat) return;
 
-    // 게임 진행 중이면 무시
     if (playing) return;
 
     // 팝업이 열려 있으면 무시
@@ -680,5 +672,5 @@ resetBtn.addEventListener("click", resetGame);
 // 페이지가 처음 열렸을 때 초기 상태 설정
 resetGame();
 
-// 저장된 기록을 화면에 반영할 수 있도록 준비
+// 저장된 기록 표시 준비
 renderHistory();
